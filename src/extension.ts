@@ -1,84 +1,143 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from "vscode";
+import { queryData } from "./util";
 
-function searchFilesWithText(searchText: any) {
-  vscode.workspace
-    .findFiles("**/*", "") // Search in all files of the workspace
+const match = /\{.*\}/s;
+let fileData: Record<string, any>;
+
+async function searchFilesWithText(searchText: string, excludePath: string) {
+  const i18Datas = queryData(fileData, searchText);
+  if (!i18Datas.length) {
+    return;
+  }
+  const i18Keys = i18Datas.map((v) => v.path);
+  return vscode.workspace
+    .findFiles("src/**/*", new vscode.RelativePattern("src", excludePath)) // Search in all files of the workspace
     .then((files) => {
-      const matchingFiles: any[] = [];
+      const matchingFiles: {
+        key: string;
+        fileName: string;
+        fullPath: string;
+        matchLocation: number;
+      }[] = [];
       const promises = files.map((uri) => {
         return vscode.workspace.openTextDocument(uri).then((document) => {
           const content = document.getText();
-          if (content.includes(searchText)) {
-            matchingFiles.push({
-              fileName: vscode.workspace.asRelativePath(uri),
-              fullPath: uri.fsPath,
-              matchLocation: content.indexOf(searchText), // You can customize the match location details as needed
-            });
-          }
+          i18Keys.forEach((key) => {
+            if (content.includes(key)) {
+              matchingFiles.push({
+                key,
+                fileName: vscode.workspace.asRelativePath(uri),
+                fullPath: uri.fsPath,
+                matchLocation: content.indexOf(key), // You can customize the match location details as needed
+              });
+            }
+          });
         });
       });
 
       return Promise.all(promises).then(() => matchingFiles);
     })
     .then((matchingFiles) => {
-      if (matchingFiles.length > 0) {
-        // Do something with the matchingFiles array (e.g., display it in an output channel)
-        console.log(matchingFiles);
-      } else {
-        console.log("No files found with the specified search text.");
-      }
+      return matchingFiles;
     });
 }
 
-function getCustomSetting() {
+function getCustomSetting<T>(configName: string): T {
   // 获取插件的配置
   const config = vscode.workspace.getConfiguration("");
-
   // 读取配置项
-  return config.get("i18n-ally.localesPaths");
+  return config.get(configName) as T;
 }
 
-function getLocalesFolderContent() {
+async function getLocalesFolderContent(
+  path: string[],
+  entry: string
+): Promise<Record<string, any> | null> {
   const folderPath = vscode.Uri.joinPath(
     vscode.Uri.file(vscode.workspace.workspaceFolders![0].uri.fsPath),
-    "src",
-    "locales"
+    ...path
   );
 
-  vscode.workspace.fs.readDirectory(folderPath).then((files) => {
-    console.log("Files and folders in src/locales/:", files);
-  });
+  const files = await vscode.workspace.fs.readDirectory(folderPath);
+  for (let item of files) {
+    if (item[0] === entry) {
+      try {
+        const file = await vscode.workspace.fs.readFile(
+          vscode.Uri.joinPath(folderPath, item[0])
+        );
+        const jsonData = eval(
+          "(" + (file.toString().match(match)?.[0] || "") + ")"
+        );
+        return jsonData;
+      } catch (error) {
+        console.log(error, "readFileError");
+        return null;
+      }
+    }
+  }
+  return null;
 }
 
-// This method is called when your extension is activated
-// Your extension is activated the very first time the command is executed
-export function activate(context: vscode.ExtensionContext) {
-  // Use the console to output diagnostic information (console.log) and errors (console.error)
-  // This line of code will only be executed once when your extension is activated
-  console.log("年轻人，你想从我这搜索什么？");
+const searchCommond = async (selectText: string, filesToExclude?: string) => {
+  await vscode.commands.executeCommand(
+    "workbench.action.findInFiles",
+    {
+      query: selectText,
+      isRegex: true,
+      triggerSearch: true,
+      isCaseSensitive: true,
+      matchWholeWord: true,
+      preserveCase: true,
+      excludeSettingAndIgnoreFiles: true,
+      showIncludesExcludes: true,
+      filesToExclude: `**/${filesToExclude}/**/*`,
+    },
+    true
+  );
+};
 
-  const settings = getCustomSetting();
-  console.log(settings);
-  getLocalesFolderContent();
+export async function activate(context: vscode.ExtensionContext) {
 
-  // The command has been defined in the package.json file
-  // Now provide the implementation of the command with registerCommand
-  // The commandId parameter must match the command field in package.json
+  const settings = getCustomSetting<string[]>("i18n-ally.localesPaths");
+  const entry = getCustomSetting<string>("search-i18n.entry") || 'zh.js';
+
+  if (!fileData) {
+    const configFile = await getLocalesFolderContent(
+      settings[0].split("/"),
+      entry
+    );
+    if (!configFile) {
+      vscode.window.showErrorMessage('未查到配置的入口文件：search-i18n.entry。默认为：zh.js')
+      return;
+    }
+    fileData = configFile;
+  }
+
   let disposable = vscode.commands.registerCommand(
     "search-i18n.searchi18n",
     () => {
-      // The code you place here will be executed every time your command is executed
-      // Display a message box to the user
+      vscode.window.showQuickPick([""], {});
       const quickPick = vscode.window.createInputBox();
+      quickPick.title = "来吧，年轻人，搜你所想的i18吧！";
       let value = "";
       quickPick.onDidChangeValue((e) => {
         value = e;
       });
-      quickPick.onDidAccept(() => {
-        console.log(value, "confirm");
-        searchFilesWithText(value);
+      quickPick.onDidAccept(async () => {
+        const queryDatas = await searchFilesWithText(value, settings[0]);
+        if (queryDatas) {
+          if (queryDatas.length === 1) {
+            await vscode.workspace
+              .openTextDocument(queryDatas[0].fullPath)
+              .then(vscode.window.showTextDocument);
+          }
+          const keys = queryDatas.map((v) => v.key);
+          searchCommond(keys.join("|"), settings[0]);
+        } else {
+          vscode.window.showInformationMessage(`未查到${value}的相关信息`);
+        }
       });
       quickPick.show();
     }
