@@ -1,10 +1,14 @@
 {
   "name": "search-i18n",
   "displayName": "search-i18n",
-  "description": "",
+  "description": "根据文本去匹配i18的key搜索对应的文件",
+  "publisher": "ynqq",
   "version": "0.0.1",
   "engines": {
     "vscode": "^1.80.0"
+  },
+  "repository": {
+    "url": " https://github.com/ynqq/vscode-search-i18n"
   },
   "categories": [
     "Other"
@@ -28,7 +32,9 @@
     "watch-tests": "tsc -p . -w --outDir out",
     "pretest": "pnpm run compile-tests && pnpm run compile && pnpm run lint",
     "lint": "eslint src --ext ts",
-    "test": "node ./out/test/runTest.js"
+    "test": "node ./out/test/runTest.js",
+    "build": "vsce package",
+    "publish": "vsce publish"
   },
   "devDependencies": {
     "@types/vscode": "^1.80.0",
@@ -47,3 +53,4 @@
     "@vscode/test-electron": "^2.3.2"
   }
 }
+
