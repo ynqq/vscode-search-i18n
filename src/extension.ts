@@ -6,15 +6,20 @@ import { queryData } from "./util";
 const match = /\{.*\}/s;
 let fileData: Record<string, any>;
 
-async function searchFilesWithText(searchText: string, excludePath: string) {
+async function searchFilesWithText(
+  searchText: string,
+  excludePath: string,
+  readConfig: string
+) {
   const i18Datas = queryData(fileData, searchText);
   if (!i18Datas.length) {
     return;
   }
+
   const i18Keys = i18Datas.map((v) => v.path);
   return vscode.workspace
     .findFiles(
-      "src/**/*.{ts,tsx,vue,js,html}",
+      `src/**/*.{${readConfig}}`,
       new vscode.RelativePattern("src", excludePath)
     ) // Search in all files of the workspace
     .then((files) => {
@@ -28,7 +33,7 @@ async function searchFilesWithText(searchText: string, excludePath: string) {
         return vscode.workspace.openTextDocument(uri).then((document) => {
           const content = document.getText();
           i18Keys.forEach((key) => {
-            if (content.includes(key)) {
+            if (new RegExp(`('|")${key}('|")`).test(content)) {
               matchingFiles.push({
                 key,
                 fileName: vscode.workspace.asRelativePath(uri),
@@ -96,6 +101,7 @@ const searchCommond = async (selectText: string, filesToExclude?: string) => {
       excludeSettingAndIgnoreFiles: true,
       showIncludesExcludes: true,
       filesToExclude: `**/${filesToExclude}/**/*`,
+      filesToInclude: `./src`,
     },
     true
   );
@@ -104,6 +110,8 @@ const searchCommond = async (selectText: string, filesToExclude?: string) => {
 export async function activate(context: vscode.ExtensionContext) {
   const settings = getCustomSetting<string[]>("i18n-ally.localesPaths");
   const entry = getCustomSetting<string>("search-i18n.entry") || "zh.js";
+  const readConfig =
+    getCustomSetting<string>("search-i18n.incldesFile") || "ts,tsx,vue";
 
   let disposable = vscode.commands.registerCommand(
     "search-i18n.searchi18n",
@@ -124,21 +132,29 @@ export async function activate(context: vscode.ExtensionContext) {
 
       vscode.window.showQuickPick([""], {});
       const quickPick = vscode.window.createInputBox();
-      quickPick.title = "来吧，年轻人，搜你所想的i18吧！";
+      quickPick.title = "来吧，年轻人，搜你所想的i18n吧！";
       let value = "";
       quickPick.onDidChangeValue((e) => {
         value = e;
       });
       quickPick.onDidAccept(async () => {
-        const queryDatas = await searchFilesWithText(value, settings[0]);
-        if (queryDatas) {
+        const queryDatas = await searchFilesWithText(
+          value,
+          settings[0],
+          readConfig
+        );
+
+        if (queryDatas && queryDatas.length) {
           if (queryDatas.length === 1) {
             await vscode.workspace
               .openTextDocument(queryDatas[0].fullPath)
               .then(vscode.window.showTextDocument);
           }
-          const keys = queryDatas.map((v) => v.key);
-          searchCommond(keys.join("|"), settings[0]);
+          const keys = Array.from(new Set(queryDatas.map((v) => v.key)));
+          searchCommond(
+            keys.map((v) => `('|")${v}('|")`).join("|"),
+            settings[0]
+          );
         } else {
           vscode.window.showInformationMessage(`未查到${value}的相关信息`);
         }
