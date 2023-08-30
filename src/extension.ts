@@ -13,7 +13,10 @@ async function searchFilesWithText(searchText: string, excludePath: string) {
   }
   const i18Keys = i18Datas.map((v) => v.path);
   return vscode.workspace
-    .findFiles("src/**/*", new vscode.RelativePattern("src", excludePath)) // Search in all files of the workspace
+    .findFiles(
+      "src/**/*.{ts,tsx,vue,js,html}",
+      new vscode.RelativePattern("src", excludePath)
+    ) // Search in all files of the workspace
     .then((files) => {
       const matchingFiles: {
         key: string;
@@ -99,25 +102,26 @@ const searchCommond = async (selectText: string, filesToExclude?: string) => {
 };
 
 export async function activate(context: vscode.ExtensionContext) {
-
   const settings = getCustomSetting<string[]>("i18n-ally.localesPaths");
-  const entry = getCustomSetting<string>("search-i18n.entry") || 'zh.js';
-
-  if (!fileData) {
-    const configFile = await getLocalesFolderContent(
-      settings[0].split("/"),
-      entry
-    );
-    if (!configFile) {
-      vscode.window.showErrorMessage('未查到配置的入口文件：search-i18n.entry。默认为：zh.js')
-      return;
-    }
-    fileData = configFile;
-  }
+  const entry = getCustomSetting<string>("search-i18n.entry") || "zh.js";
 
   let disposable = vscode.commands.registerCommand(
     "search-i18n.searchi18n",
-    () => {
+    async () => {
+      if (!fileData) {
+        const configFile = await getLocalesFolderContent(
+          settings[0].split("/"),
+          entry
+        );
+        if (!configFile) {
+          vscode.window.showErrorMessage(
+            "未查到配置的入口文件：search-i18n.entry。默认为：zh.js"
+          );
+          return;
+        }
+        fileData = configFile;
+      }
+
       vscode.window.showQuickPick([""], {});
       const quickPick = vscode.window.createInputBox();
       quickPick.title = "来吧，年轻人，搜你所想的i18吧！";
