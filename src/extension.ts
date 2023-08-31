@@ -53,10 +53,16 @@ async function searchFilesWithText(
 }
 
 function getCustomSetting<T>(configName: string): T {
-  // 获取插件的配置
-  const config = vscode.workspace.getConfiguration("");
-  // 读取配置项
-  return config.get(configName) as T;
+  try {
+    // 获取插件的配置
+    const config = vscode.workspace.getConfiguration("");
+    // 读取配置项
+    return config.get(configName) as T;
+  } catch (error) {
+    console.log("???");
+
+    return "" as T;
+  }
 }
 
 async function getLocalesFolderContent(
@@ -109,6 +115,11 @@ const searchCommond = async (selectText: string, filesToExclude?: string) => {
 
 export async function activate(context: vscode.ExtensionContext) {
   const settings = getCustomSetting<string[]>("i18n-ally.localesPaths");
+  if (!settings) {
+    vscode.window.showErrorMessage(
+      `未查到i18n配置目录,请检查settings.json中[i18n-ally.localesPaths]配置项`
+    );
+  }
   const entry = getCustomSetting<string>("search-i18n.entry") || "zh.js";
   const readConfig =
     getCustomSetting<string>("search-i18n.incldesFile") || "ts,tsx,vue";
@@ -116,6 +127,9 @@ export async function activate(context: vscode.ExtensionContext) {
   let disposable = vscode.commands.registerCommand(
     "search-i18n.searchi18n",
     async () => {
+      if (!settings) {
+        return;
+      }
       if (!fileData) {
         const configFile = await getLocalesFolderContent(
           settings[0].split("/"),
