@@ -27,7 +27,6 @@ async function searchFilesWithText(
         key: string;
         fileName: string;
         fullPath: string;
-        matchLocation: number;
       }[] = [];
       const promises = files.map((uri) => {
         return vscode.workspace.openTextDocument(uri).then((document) => {
@@ -38,7 +37,6 @@ async function searchFilesWithText(
                 key,
                 fileName: vscode.workspace.asRelativePath(uri),
                 fullPath: uri.fsPath,
-                matchLocation: content.indexOf(key), // You can customize the match location details as needed
               });
             }
           });
@@ -59,8 +57,6 @@ function getCustomSetting<T>(configName: string): T {
     // 读取配置项
     return config.get(configName) as T;
   } catch (error) {
-    console.log("???");
-
     return "" as T;
   }
 }

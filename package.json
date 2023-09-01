@@ -3,7 +3,7 @@
   "displayName": "search-i18n",
   "description": "根据文本去匹配i18的key搜索对应的文件",
   "publisher": "ynqq",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "engines": {
     "vscode": "^1.80.0"
   },
@@ -17,6 +17,27 @@
   "activationEvents": [],
   "main": "./dist/extension.js",
   "contributes": {
+    "configuration": {
+      "properties": {
+        "search-i18n.entry": {
+          "type": "string",
+          "default": "zh.js",
+          "description": "要搜索的语言包文件"
+        },
+        "search-i18n.incldesFile": {
+          "type": "string",
+          "default": "ts,tsx,vue",
+          "description": "需要检索的文件"
+        }
+      }
+    },
+    "keybindings": [
+      {
+        "command": "search-i18n.searchi18n",
+        "key": "ctrl+i ctrl+8",
+        "when": "editorTextFocus"
+      }
+    ],
     "commands": [
       {
         "command": "search-i18n.searchi18n",
