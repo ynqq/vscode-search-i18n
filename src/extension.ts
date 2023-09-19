@@ -2,9 +2,12 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from "vscode";
 import { queryData } from "./util";
+import * as path from "path";
+import * as fs from "fs";
 
 const match = /\{.*\}/s;
 let fileData: Record<string, any>;
+let realZHFilePath = "";
 
 async function searchFilesWithText(
   searchText: string,
@@ -119,25 +122,44 @@ export async function activate(context: vscode.ExtensionContext) {
   const entry = getCustomSetting<string>("search-i18n.entry") || "zh.js";
   const readConfig =
     getCustomSetting<string>("search-i18n.incldesFile") || "ts,tsx,vue";
+  const folderPath = vscode.Uri.joinPath(
+    vscode.Uri.file(vscode.workspace.workspaceFolders![0].uri.fsPath),
+    ...settings[0].split("/")
+  );
+  if (!fileData) {
+    const configFile = await getLocalesFolderContent(
+      settings[0].split("/"),
+      entry
+    );
+    if (!configFile) {
+      vscode.window.showErrorMessage(
+        "未查到配置的入口文件：search-i18n.entry。默认为：zh.js"
+      );
+      return;
+    }
+    fileData = configFile;
+  }
 
-  let disposable = vscode.commands.registerCommand(
+  realZHFilePath = path.join(folderPath.fsPath, entry);
+  fs.watchFile(realZHFilePath, async (eventType: fs.Stats) => {
+    const configFile = await getLocalesFolderContent(
+      settings[0].split("/"),
+      entry
+    );
+    if (!configFile) {
+      vscode.window.showErrorMessage(
+        "未查到配置的入口文件：search-i18n.entry。默认为：zh.js"
+      );
+      return;
+    }
+    fileData = configFile;
+  });
+  vscode.workspace.onDidCloseTextDocument((e) => {});
+  const disposable = vscode.commands.registerCommand(
     "search-i18n.searchi18n",
     async () => {
       if (!settings) {
         return;
-      }
-      if (!fileData) {
-        const configFile = await getLocalesFolderContent(
-          settings[0].split("/"),
-          entry
-        );
-        if (!configFile) {
-          vscode.window.showErrorMessage(
-            "未查到配置的入口文件：search-i18n.entry。默认为：zh.js"
-          );
-          return;
-        }
-        fileData = configFile;
       }
 
       vscode.window.showQuickPick([""], {});
@@ -174,8 +196,73 @@ export async function activate(context: vscode.ExtensionContext) {
   );
 
   context.subscriptions.push(disposable);
+
+  const hoverDisposable = vscode.languages.registerHoverProvider("*", {
+    provideHover(document, position) {
+      const editor = vscode.window.activeTextEditor;
+      if (!editor) {
+        return undefined;
+      }
+      let selectText = editor.document.getText(editor.selection);
+      if (selectText.trim() === "") {
+        return undefined;
+      }
+      selectText = selectText.replace(/'|"/g, "");
+      const word = document.getText(document.getWordRangeAtPosition(position));
+      const isChinese =
+        /[\u4e00-\u9fa5]/.test(selectText) && word === selectText;
+      if (isChinese) {
+        const i18Datas = queryData(fileData, selectText);
+        if (i18Datas.length) {
+          const hoverText = [`|key|替换vue|替换js|\n|:---:|:---:|:---:|`];
+          i18Datas.forEach(({ path }) => {
+            hoverText.push(
+              `|${path}|[✏️](command:search-i18n.replaceText?${encodeURIComponent(
+                JSON.stringify({ path, isVue: true })
+              )} "替换")|[✏️](command:search-i18n.replaceText?${encodeURIComponent(
+                JSON.stringify({ path, isJs: true })
+              )} "替换")|`
+            );
+          });
+          const hoverBox = new vscode.MarkdownString(hoverText.join("\n"));
+          hoverBox.isTrusted = true;
+          const hoverRange = new vscode.Range(position, position);
+          return new vscode.Hover(hoverBox, hoverRange);
+        } else {
+          return new vscode.Hover(
+            new vscode.MarkdownString(`未搜索到${selectText}的相关信息`)
+          );
+        }
+      }
+      return undefined;
+    },
+  });
+  context.subscriptions.push(hoverDisposable);
+
+  const replaceDisposable = vscode.commands.registerCommand(
+    "search-i18n.replaceText",
+    ({ path, isVue, isJs }) => {
+      // 替换选中文本
+      const editor = vscode.window.activeTextEditor;
+      if (!editor) {
+        return;
+      }
+      editor.edit((editBuilder) => {
+        if (isVue) {
+          editBuilder.replace(editor.selection, `{{ $t('${path}') }}`);
+        } else if (isJs) {
+          editBuilder.replace(editor.selection, `$t('${path}')`);
+        }
+      });
+    }
+  );
+  context.subscriptions.push(replaceDisposable);
 }
 
 // This method is called when your extension is deactivated
-export function deactivate() {}
+export function deactivate() {
+  if (realZHFilePath) {
+    fs.unwatchFile(realZHFilePath);
+  }
+}
 

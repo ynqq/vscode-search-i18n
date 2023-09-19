@@ -3,7 +3,7 @@
   "displayName": "search-i18n",
   "description": "根据文本去匹配i18的key搜索对应的文件",
   "publisher": "ynqq",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "engines": {
     "vscode": "^1.80.0"
   },
@@ -14,7 +14,11 @@
     "Other"
   ],
   "icon": "images/icon.png",
-  "activationEvents": [],
+  "activationEvents": [
+    "onLanguage:vue",
+    "onLanguage:javascript",
+    "onLanguage:typescript"
+  ],
   "main": "./dist/extension.js",
   "contributes": {
     "configuration": {
@@ -42,6 +46,11 @@
       {
         "command": "search-i18n.searchi18n",
         "title": "searchi18n"
+      },
+      {
+        "command": "search-i18n.replaceText",
+        "title": "replaceText",
+        "icon": "$(edit)"
       }
     ]
   },
