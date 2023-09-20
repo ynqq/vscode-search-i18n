@@ -3,7 +3,7 @@
   "displayName": "search-i18n",
   "description": "根据文本去匹配i18的key搜索对应的文件",
   "publisher": "ynqq",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "engines": {
     "vscode": "^1.80.0"
   },
@@ -40,6 +40,16 @@
         "command": "search-i18n.searchi18n",
         "key": "ctrl+i ctrl+8",
         "when": "editorTextFocus"
+      },
+      {
+        "command": "search-i18n.replaceVueText",
+        "key": "alt+d",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "search-i18n.replaceJsText",
+        "key": "alt+x",
+        "when": "editorTextFocus"
       }
     ],
     "commands": [
@@ -51,6 +61,14 @@
         "command": "search-i18n.replaceText",
         "title": "replaceText",
         "icon": "$(edit)"
+      },
+      {
+        "command": "search-i18n.replaceVueText",
+        "title": "replaceVueText"
+      },
+      {
+        "command": "search-i18n.replaceJsText",
+        "title": "replaceJsText"
       }
     ]
   },
