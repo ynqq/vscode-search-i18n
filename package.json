@@ -30,6 +30,16 @@
           "type": "string",
           "default": "ts,tsx,vue",
           "description": "需要检索的文件"
+        },
+        "search-i18n.enableTransform": {
+          "type": "string",
+          "default": false,
+          "description": "是否开启自动转换"
+        },
+        "search-i18n.transKey": {
+          "type": "string",
+          "default": "autoKey",
+          "description": "自动转换的前置key"
         }
       }
     },
