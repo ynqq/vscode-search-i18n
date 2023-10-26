@@ -1,13 +1,14 @@
-import { window } from "vscode";
+import { Uri, window, workspace } from "vscode";
 import {
   getCustomSetting,
   getEnableTransform,
   getEntry,
   getTransKey,
 } from "./config";
-import { TQueryData } from "./util";
-import { getFileData } from "./fileData";
+import { TQueryData, sleep } from "./util";
+import { assignFileData, getFileData, setAutoChange } from "./fileData";
 import { LOCALESPATHS } from "./enum";
+import fs = require("fs");
 
 // 格式化key
 const transformKey = (index?: number) => {
@@ -30,19 +31,39 @@ const getTransKeyMax = () => {
 };
 
 // 写入文件
-const writeFile = async () => {
+const writeFile = async (transKey: string, selectText: string) => {
   const settings = getCustomSetting<string[]>(LOCALESPATHS);
   const entry = getEntry();
+  const filePath = Uri.joinPath(
+    Uri.file(workspace.workspaceFolders![0].uri.fsPath),
+    ...settings[0].split("/"),
+    entry
+  );
+  const file = await workspace.fs.readFile(filePath);
+  const lastFile = file.toString().replace(
+    /\};/,
+    `  ${transKey}: '${selectText}',
+};`
+  );
+  try {
+    setAutoChange(true);
+    fs.writeFileSync(filePath.fsPath, lastFile, "utf-8");
+    assignFileData({
+      [transKey]: selectText,
+    });
+    await sleep(300);
+    setAutoChange(false);
+  } catch (error) {
+    setAutoChange(false);
+  }
 };
 
 export const handleAutoWrite = async (
   selectText: string
 ): Promise<boolean | TQueryData> => {
   if (getEnableTransform()) {
-    const key = getTransKey();
     const transKey = getTransKeyMax();
-    console.log(key, transKey);
-
+    await writeFile(transKey, selectText);
     return [{ path: transKey, value: selectText }];
   }
 

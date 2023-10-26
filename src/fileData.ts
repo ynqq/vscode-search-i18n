@@ -7,10 +7,15 @@ import { getLocalesFolderContent } from "./search";
 
 let fileData: Record<string, any>; // 中文语言包数据
 export const getFileData = () => fileData;
+let isAutoChange = false;
 
 export const assignFileData = (data: Record<string, any>) => {
   Object.assign(fileData, data);
   return fileData;
+};
+
+export const setAutoChange = (value: boolean) => {
+  isAutoChange = value;
 };
 
 export const setFileData = async () => {
@@ -30,6 +35,8 @@ export const setFileData = async () => {
 export const watchFile = () => {
   const realZHFilePath = getRealZHFilePath();
   fs.watchFile(realZHFilePath, async () => {
-    setFileData();
+    if (!isAutoChange) {
+      setFileData();
+    }
   });
 };

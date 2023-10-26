@@ -104,7 +104,7 @@ export const replaceVueDisposable = commands.registerCommand(
 
 export const replaceJsDisposable = commands.registerCommand(
   allCommonds.replaceJs,
-  () => {
+  async () => {
     if (checkLineIsComment()) {
       return;
     }
@@ -117,21 +117,25 @@ export const replaceJsDisposable = commands.registerCommand(
       return;
     }
     const fileData = getFileData();
-    const i18Datas = queryData(fileData, selectText);
-    if (i18Datas.length) {
-      const selectTextAndSymbol = querySelectTextAndSymbol(
-        editor.document,
-        editor.selection.active,
-        selectText
-      );
-      replaceSelectText({
-        path: i18Datas[0].path,
-        isVue: false,
-        isJs: true,
-        hasSymbol: checkHasSymbol(selectTextAndSymbol),
-      });
-    } else {
-      window.showWarningMessage(`未搜索到${selectText}的相关信息`);
+    let i18Datas = queryData(fileData, selectText);
+    if (!i18Datas.length) {
+      const autoWrite = await handleAutoWrite(selectText);
+      if (autoWrite === false) {
+        return;
+      } else {
+        i18Datas = autoWrite as TQueryData;
+      }
     }
+    const selectTextAndSymbol = querySelectTextAndSymbol(
+      editor.document,
+      editor.selection.active,
+      selectText
+    );
+    replaceSelectText({
+      path: i18Datas[0].path,
+      isVue: false,
+      isJs: true,
+      hasSymbol: checkHasSymbol(selectTextAndSymbol),
+    });
   }
 );

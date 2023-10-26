@@ -115,3 +115,11 @@ export const checkLineIsComment = () => {
   );
   return checkIsComment(lineText);
 };
+
+export const sleep = (time: number) => {
+  return new Promise<void>((resolve) => {
+    setTimeout(() => {
+      resolve();
+    }, time);
+  });
+};
