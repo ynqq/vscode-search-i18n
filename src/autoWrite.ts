@@ -22,8 +22,9 @@ const getTransKeyMax = () => {
   const fileData = getFileData();
   const keys = Object.keys(fileData)
     .filter((v) => v.startsWith(transKey))
-    .map((v) => +v.replace(transKey, ""))
-    .sort();
+    .map((v) => Number(v.replace(transKey, "")))
+    .sort((a, b) => a - b);
+
   if (keys.length) {
     return transformKey(keys.pop()! + 1);
   }
