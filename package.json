@@ -3,7 +3,7 @@
   "displayName": "search-i18n",
   "description": "根据文本去匹配i18的key搜索对应的文件",
   "publisher": "ynqq",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "engines": {
     "vscode": "^1.80.0"
   },
@@ -32,7 +32,7 @@
           "description": "需要检索的文件"
         },
         "search-i18n.enableTransform": {
-          "type": "string",
+          "type": "boolean",
           "default": false,
           "description": "是否开启自动转换"
         },
