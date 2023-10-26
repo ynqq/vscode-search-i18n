@@ -1,6 +1,7 @@
 import { Selection, commands, window } from "vscode";
 import { allCommonds } from "../enum";
 import {
+  TQueryData,
   checkHasSymbol,
   checkIsChinese,
   checkLineIsComment,
@@ -8,6 +9,7 @@ import {
   querySelectTextAndSymbol,
 } from "../util";
 import { getFileData } from "../fileData";
+import { handleAutoWrite } from "../autoWrite";
 
 interface ReplaceParams {
   path: string;
@@ -64,7 +66,7 @@ export const replaceDisposable = commands.registerCommand(
 
 export const replaceVueDisposable = commands.registerCommand(
   allCommonds.replaceVue,
-  () => {
+  async () => {
     if (checkLineIsComment()) {
       return;
     }
@@ -77,22 +79,26 @@ export const replaceVueDisposable = commands.registerCommand(
       return;
     }
     const fileData = getFileData();
-    const i18Datas = queryData(fileData, selectText);
-    if (i18Datas.length) {
-      const selectTextAndSymbol = querySelectTextAndSymbol(
-        editor.document,
-        editor.selection.active,
-        selectText
-      );
-      replaceSelectText({
-        path: i18Datas[0].path,
-        isVue: true,
-        isJs: false,
-        hasSymbol: checkHasSymbol(selectTextAndSymbol),
-      });
-    } else {
-      window.showWarningMessage(`未搜索到${selectText}的相关信息`);
+    let i18Datas = queryData(fileData, selectText);
+    if (!i18Datas.length) {
+      const autoWrite = await handleAutoWrite(selectText);
+      if (autoWrite === false) {
+        return;
+      } else {
+        i18Datas = autoWrite as TQueryData;
+      }
     }
+    const selectTextAndSymbol = querySelectTextAndSymbol(
+      editor.document,
+      editor.selection.active,
+      selectText
+    );
+    replaceSelectText({
+      path: i18Datas[0].path,
+      isVue: true,
+      isJs: false,
+      hasSymbol: checkHasSymbol(selectTextAndSymbol),
+    });
   }
 );
 

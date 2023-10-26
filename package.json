@@ -3,7 +3,7 @@
   "displayName": "search-i18n",
   "description": "根据文本去匹配i18的key搜索对应的文件",
   "publisher": "ynqq",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "engines": {
     "vscode": "^1.80.0"
   },
@@ -15,9 +15,7 @@
   ],
   "icon": "images/icon.png",
   "activationEvents": [
-    "onLanguage:vue",
-    "onLanguage:javascript",
-    "onLanguage:typescript"
+    "onLanguage:vue"
   ],
   "main": "./dist/extension.js",
   "contributes": {
