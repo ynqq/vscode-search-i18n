@@ -7,7 +7,7 @@ function isString(str: any) {
   return typeof str === "string";
 }
 
-type TQueryData = {
+export type TQueryData = {
   value: string;
   path: string;
 }[];
@@ -96,7 +96,13 @@ export const checkIsChinese = (selectText: string) => {
 };
 // 校验是注释
 export const checkIsComment = (lineText: string) => {
-  return /(\/\/)|(\/\*)|(^\s+\*\s+)/.test(lineText);
+  return (
+    checkIsHtmlComment(lineText) || /(\/\/)|(\/\*)|(^\s+\*\s+)/.test(lineText)
+  );
+};
+// 校验是否是html注释
+export const checkIsHtmlComment = (lineText: string) => {
+  return /<!--/.test(lineText);
 };
 // 校验当前行是否是注释
 export const checkLineIsComment = () => {
@@ -108,4 +114,12 @@ export const checkLineIsComment = () => {
     editor.document.lineAt(editor.selection.active.line).range
   );
   return checkIsComment(lineText);
+};
+
+export const sleep = (time: number) => {
+  return new Promise<void>((resolve) => {
+    setTimeout(() => {
+      resolve();
+    }, time);
+  });
 };

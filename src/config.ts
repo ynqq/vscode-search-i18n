@@ -1,5 +1,11 @@
 import { Uri, workspace } from "vscode";
-import { ENTRY, INCLUDESFILE, LOCALESPATHS } from "./enum";
+import {
+  ENABLETRANSFORM,
+  ENTRY,
+  INCLUDESFILE,
+  LOCALESPATHS,
+  TRANSKEY,
+} from "./enum";
 import * as path from "path";
 
 let realZHFilePath = ""; // 中文语言包文件路径
@@ -22,6 +28,12 @@ export const getI18nPaths = () => {
 };
 export const getReadConfig = () => {
   return getCustomSetting<string>(INCLUDESFILE) || "ts,tsx,vue";
+};
+export const getEnableTransform = () => {
+  return getCustomSetting<boolean>(ENABLETRANSFORM);
+};
+export const getTransKey = () => {
+  return getCustomSetting<string>(TRANSKEY) || "autoKey";
 };
 
 export function getCustomSetting<T>(configName: string): T {

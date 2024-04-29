@@ -1,6 +1,8 @@
 export const LOCALESPATHS = "i18n-ally.localesPaths";
 export const ENTRY = "search-i18n.entry";
 export const INCLUDESFILE = "search-i18n.incldesFile";
+export const ENABLETRANSFORM = "search-i18n.enableTransform";
+export const TRANSKEY = "search-i18n.transKey";
 export const allCommonds = {
   search: "search-i18n.searchi18n",
   replace: "search-i18n.replaceText",
