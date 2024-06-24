@@ -3,7 +3,7 @@
   "displayName": "search-i18n",
   "description": "根据文本去匹配i18的key搜索对应的文件",
   "publisher": "ynqq",
-  "version": "0.0.10",
+  "version": "0.0.11",
   "engines": {
     "vscode": "^1.80.0"
   },
@@ -24,7 +24,7 @@
         "search-i18n.entry": {
           "type": "string",
           "default": "zh.js",
-          "description": "要搜索的语言包文件"
+          "description": "要搜索的语言包文件 相对于i18n-ally.localesPaths第一个值"
         },
         "search-i18n.incldesFile": {
           "type": "string",
