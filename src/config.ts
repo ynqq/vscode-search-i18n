@@ -1,9 +1,11 @@
 import { Uri, workspace } from "vscode";
 import {
+  ENABLE_TRANS,
   ENABLETRANSFORM,
   ENTRY,
   INCLUDESFILE,
   LOCALESPATHS,
+  TRANS_FILE_CONFIG,
   TRANSKEY,
 } from "./enum";
 import * as path from "path";
@@ -34,6 +36,19 @@ export const getEnableTransform = () => {
 };
 export const getTransKey = () => {
   return getCustomSetting<string>(TRANSKEY) || "autoKey";
+};
+/**
+ * 是否开启自动翻译
+ * @returns
+ */
+export const getEnableTrans = () => {
+  return getCustomSetting<boolean>(ENABLE_TRANS);
+};
+export const getTranFileConfig = () => {
+  return getCustomSetting<{
+    en?: string;
+    ja?: string;
+  }>(TRANS_FILE_CONFIG);
 };
 
 export function getCustomSetting<T>(configName: string): T {

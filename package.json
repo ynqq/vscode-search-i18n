@@ -3,7 +3,7 @@
   "displayName": "search-i18n",
   "description": "根据文本去匹配i18的key搜索对应的文件",
   "publisher": "ynqq",
-  "version": "0.0.11",
+  "version": "0.0.12",
   "engines": {
     "vscode": "^1.80.0"
   },
@@ -40,6 +40,16 @@
           "type": "string",
           "default": "autoKey",
           "description": "自动转换的前置key"
+        },
+        "search-i18n.enableTrans": {
+          "type": "boolean",
+          "default": false,
+          "description": "是否开启翻译功能，如果开启需要安装[trans-lang]"
+        },
+        "search-i18n.transFileConfig": {
+          "type": "object",
+          "default": {},
+          "description": "开启翻译功能需要配置修改的文件地址, 目前只支持[jp, en]"
         }
       }
     },
@@ -110,4 +120,3 @@
     "@vscode/test-electron": "^2.3.2"
   }
 }
-

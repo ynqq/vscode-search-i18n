@@ -1,8 +1,10 @@
-import { Uri, window, workspace } from "vscode";
+import { Uri, window, workspace, commands } from "vscode";
 import {
   getCustomSetting,
+  getEnableTrans,
   getEnableTransform,
   getEntry,
+  getTranFileConfig,
   getTransKey,
 } from "./config";
 import { TQueryData, sleep } from "./util";
@@ -32,29 +34,51 @@ const getTransKeyMax = () => {
 };
 
 // 写入文件
-const writeFile = async (transKey: string, selectText: string) => {
+const writeFile = async (
+  transKey: string,
+  selectText: string,
+  entry: string,
+  assign?: boolean
+) => {
   const settings = getCustomSetting<string[]>(LOCALESPATHS);
-  const entry = getEntry();
   const filePath = Uri.joinPath(
     Uri.file(workspace.workspaceFolders![0].uri.fsPath),
     ...settings[0].split("/"),
     entry
   );
   const file = await workspace.fs.readFile(filePath);
-  const lastFile = file.toString().replace(
-    /\};/,
-    `  ${transKey}: '${selectText}',
+  const jsonReg = /(\n)*\}(\n*)$/;
+  const jsReg = /\};/;
+  const fileString = file.toString();
+  const lastFile = jsReg.test(fileString)
+    ? fileString.replace(
+        jsReg,
+        `  ${transKey}: '${selectText}',
 };`
-  );
+      )
+    : jsonReg.test(fileString)
+    ? fileString.replace(jsonReg, ``) +
+      `,
+  "${transKey}": "${selectText}"
+}
+`
+    : false;
+  if (!lastFile) {
+    return;
+  }
+
   try {
     setAutoChange(true);
     fs.writeFileSync(filePath.fsPath, lastFile, "utf-8");
-    assignFileData({
-      [transKey]: selectText,
-    });
+    assign &&
+      assignFileData({
+        [transKey]: selectText,
+      });
+
     await sleep(300);
     setAutoChange(false);
   } catch (error) {
+    window.showErrorMessage(`自动写入出错,${[transKey, selectText, entry]}`);
     setAutoChange(false);
   }
 };
@@ -64,7 +88,33 @@ export const handleAutoWrite = async (
 ): Promise<boolean | TQueryData> => {
   if (getEnableTransform()) {
     const transKey = getTransKeyMax();
-    await writeFile(transKey, selectText);
+    const enableTrans = getEnableTrans();
+    const entry = getEntry();
+    await writeFile(transKey, selectText, entry, true);
+    if (enableTrans) {
+      // 开启翻译
+      const config = getTranFileConfig();
+      const keys = Object.keys(config);
+      try {
+        for (const key of keys) {
+          const transResult: {
+            str: string;
+            toStr: string;
+            to: "jp" | "en";
+          } = await commands.executeCommand("trans-lang.getValue", {
+            text: selectText,
+            to: key,
+          });
+          await writeFile(
+            transKey,
+            transResult.toStr,
+            config[key as keyof typeof config]!
+          );
+        }
+      } catch (error) {
+        window.showErrorMessage(`翻译出错: ${error}`);
+      }
+    }
     return [{ path: transKey, value: selectText }];
   }
 
