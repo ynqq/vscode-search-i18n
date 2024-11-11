@@ -1,5 +1,6 @@
 # search-i18n
-<div align=center><image src="./download.jpg" /></div>
+
+![alt text22](images/download.png)
 
 自动翻译英语、日语并写入配置文件
 
@@ -8,18 +9,23 @@
 - 配置
   ```json
   {
-    "search-i18n.entry": "./language/zh-CN.json", // i18n-ally.localesPaths第一个目录的相对路径
-    "search-i18n.enableTransform": true, // 是否开启自动转换
-    "search-i18n.enableTrans": true, // 是否开启翻译功能
-    "search-i18n.transKey": "ynqq_auto_key", // 自动转换的前置key 默认是: autoKey 效果就是(autoKey1, autoKey2...)
-    "search-i18n.transFileConfig": { // 配置文件 路径和 entry 一样 目前只支持英语、日语
+    // i18n-ally.localesPaths第一个目录的相对路径
+    "search-i18n.entry": "./language/zh-CN.json",
+    // 是否开启自动转换
+    "search-i18n.enableTransform": true,
+    // 是否开启翻译功能
+    "search-i18n.enableTrans": true,
+    // 自动转换的前置key 默认是: autoKey 效果就是(autoKey1, autoKey2...)
+    "search-i18n.transKey": "ynqq_auto_key",
+    // 配置文件 路径和 entry 一样 目前只支持英语、日语
+    "search-i18n.transFileConfig": {
       "en": "./language/en-US.json",
       "jp": "./language/ja.json"
     }
   }
   ```
 
-<video controls src="给我翻译翻译.mp4" title="Title"></video>
+![alt text](images/translateForMe.gif)
 
 根据文本去匹配 i18 的 key 搜索对应的文件
 
@@ -41,9 +47,9 @@
 3. 搜索 searchi18n
 4. 输入搜索内容，点击回车。
 5. 插件会查询到所有匹配的内容，然后执行搜索功能。
-   ![搜索结果](image-1.png)
+   ![搜索结果](images/image-1.png)
 6. 选中中文时可以自动替换成对应的 key
-   ![替换](image.png)
+   ![替换](images/image.png)
 
 ## LICENSE
 
