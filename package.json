@@ -1,9 +1,9 @@
 {
   "name": "search-i18n",
   "displayName": "search-i18n",
-  "description": "根据文本去匹配i18的key搜索对应的文件",
+  "description": "1: 自动翻译语言包 2: 根据文本去匹配i18的key搜索对应的文件",
   "publisher": "ynqq",
-  "version": "0.0.12",
+  "version": "0.0.13",
   "engines": {
     "vscode": "^1.80.0"
   },
