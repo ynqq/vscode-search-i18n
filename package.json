@@ -3,7 +3,7 @@
   "displayName": "search-i18n",
   "description": "1: 自动翻译语言包 2: 根据文本去匹配i18的key搜索对应的文件",
   "publisher": "ynqq",
-  "version": "0.0.14",
+  "version": "0.0.15",
   "engines": {
     "vscode": "^1.80.0"
   },
@@ -95,6 +95,9 @@
       }
     ]
   },
+  "extensionDependencies": [
+    "ynqq.trans-lang"
+  ],
   "scripts": {
     "vscode:prepublish": "pnpm run package",
     "compile": "webpack",
