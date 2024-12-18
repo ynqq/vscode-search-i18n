@@ -64,78 +64,111 @@ export const replaceDisposable = commands.registerCommand(
   }
 );
 
+/**
+ * 处理vue转换
+ * @param useEnKey 是否使用翻译的英文小驼峰当做key
+ * @returns
+ */
+const handleVueReplace = async (useEnKey: boolean) => {
+  if (checkLineIsComment()) {
+    return;
+  }
+  const editor = window.activeTextEditor;
+  if (!editor) {
+    return;
+  }
+  const selectText = editor.document.getText(editor.selection);
+  if (!selectText || !checkIsChinese(selectText)) {
+    return;
+  }
+  const fileData = getFileData();
+  let i18Datas = queryData(fileData, selectText);
+  if (!i18Datas.length) {
+    const autoWrite = await handleAutoWrite(selectText, useEnKey);
+    if (autoWrite === false) {
+      return;
+    } else {
+      i18Datas = autoWrite as TQueryData;
+    }
+  }
+  const selectTextAndSymbol = querySelectTextAndSymbol(
+    editor.document,
+    editor.selection.active,
+    selectText
+  );
+  replaceSelectText({
+    path: i18Datas[0].path,
+    isVue: true,
+    isJs: false,
+    hasSymbol: checkHasSymbol(selectTextAndSymbol),
+  });
+};
+
+/**
+ * vue使用自定义key
+ */
 export const replaceVueDisposable = commands.registerCommand(
   allCommonds.replaceVue,
-  async () => {
-    if (checkLineIsComment()) {
-      return;
-    }
-    const editor = window.activeTextEditor;
-    if (!editor) {
-      return;
-    }
-    const selectText = editor.document.getText(editor.selection);
-    if (!selectText || !checkIsChinese(selectText)) {
-      return;
-    }
-    const fileData = getFileData();
-    let i18Datas = queryData(fileData, selectText);
-    if (!i18Datas.length) {
-      const autoWrite = await handleAutoWrite(selectText);
-      if (autoWrite === false) {
-        return;
-      } else {
-        i18Datas = autoWrite as TQueryData;
-      }
-    }
-    const selectTextAndSymbol = querySelectTextAndSymbol(
-      editor.document,
-      editor.selection.active,
-      selectText
-    );
-    replaceSelectText({
-      path: i18Datas[0].path,
-      isVue: true,
-      isJs: false,
-      hasSymbol: checkHasSymbol(selectTextAndSymbol),
-    });
-  }
+  () => handleVueReplace(false)
+);
+/**
+ * vue使用翻译的key
+ */
+export const replaceVueDisposableUseEnKey = commands.registerCommand(
+  allCommonds.replaceVueWithEn,
+  () => handleVueReplace(true)
 );
 
+/**
+ * 处理js替换
+ * @param useEnKey 是否使用翻译的英文小驼峰当做key
+ * @returns
+ */
+const handleJsReplace = async (useEnKey: boolean) => {
+  if (checkLineIsComment()) {
+    return;
+  }
+  const editor = window.activeTextEditor;
+  if (!editor) {
+    return;
+  }
+  const selectText = editor.document.getText(editor.selection);
+  if (!selectText || !checkIsChinese(selectText)) {
+    return;
+  }
+  const fileData = getFileData();
+  let i18Datas = queryData(fileData, selectText);
+  if (!i18Datas.length) {
+    const autoWrite = await handleAutoWrite(selectText, useEnKey);
+    if (autoWrite === false) {
+      return;
+    } else {
+      i18Datas = autoWrite as TQueryData;
+    }
+  }
+  const selectTextAndSymbol = querySelectTextAndSymbol(
+    editor.document,
+    editor.selection.active,
+    selectText
+  );
+  replaceSelectText({
+    path: i18Datas[0].path,
+    isVue: false,
+    isJs: true,
+    hasSymbol: checkHasSymbol(selectTextAndSymbol),
+  });
+};
+/**
+ * js使用自定义key
+ */
 export const replaceJsDisposable = commands.registerCommand(
   allCommonds.replaceJs,
-  async () => {
-    if (checkLineIsComment()) {
-      return;
-    }
-    const editor = window.activeTextEditor;
-    if (!editor) {
-      return;
-    }
-    const selectText = editor.document.getText(editor.selection);
-    if (!selectText || !checkIsChinese(selectText)) {
-      return;
-    }
-    const fileData = getFileData();
-    let i18Datas = queryData(fileData, selectText);
-    if (!i18Datas.length) {
-      const autoWrite = await handleAutoWrite(selectText);
-      if (autoWrite === false) {
-        return;
-      } else {
-        i18Datas = autoWrite as TQueryData;
-      }
-    }
-    const selectTextAndSymbol = querySelectTextAndSymbol(
-      editor.document,
-      editor.selection.active,
-      selectText
-    );
-    replaceSelectText({
-      path: i18Datas[0].path,
-      isVue: false,
-      isJs: true,
-      hasSymbol: checkHasSymbol(selectTextAndSymbol),
-    });
-  }
+  () => handleJsReplace(false)
+);
+/**
+ * js使用翻译的key
+ */
+export const replaceJsDisposableUseEnKey = commands.registerCommand(
+  allCommonds.replaceJsWithEn,
+  () => handleJsReplace(true)
 );

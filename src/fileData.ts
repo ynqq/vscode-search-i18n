@@ -4,9 +4,13 @@ import { window } from "vscode";
 import { getCustomSetting, getEntry, getRealZHFilePath } from "./config";
 import { ENTRY, LOCALESPATHS } from "./enum";
 import { getLocalesFolderContent } from "./search";
+import { getAllKeyPathsDFS } from "./util";
 
 let fileData: Record<string, any>; // 中文语言包数据
 export const getFileData = () => fileData;
+/**存储中文配置里面的key，如果有重复暂时使用加下标的方式 */
+let configKeys: string[] = [];
+export const getConfigKeys = () => configKeys;
 let isAutoChange = false;
 
 export const assignFileData = (data: Record<string, any>) => {
@@ -30,6 +34,7 @@ export const setFileData = async () => {
     return;
   }
   fileData = configFile;
+  configKeys = getAllKeyPathsDFS(configFile);
 };
 
 export const watchFile = () => {

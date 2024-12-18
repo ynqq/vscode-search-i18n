@@ -7,7 +7,13 @@ import {
   getTranFileConfig,
   getTransKey,
 } from "./config";
-import { TQueryData, sleep } from "./util";
+import {
+  TQueryData,
+  getKeyIndex,
+  getNowGitBranch,
+  sleep,
+  toHump,
+} from "./util";
 import { assignFileData, getFileData, setAutoChange } from "./fileData";
 import { LOCALESPATHS } from "./enum";
 import fs = require("fs");
@@ -15,7 +21,10 @@ import fs = require("fs");
 // 格式化key
 const transformKey = (index?: number) => {
   const key = getTransKey();
-  return `${key}_${index === undefined ? "" : index}`;
+  const gitBranch = getNowGitBranch();
+  return `${key}${gitBranch ? `_${gitBranch}` : ""}_${
+    index === undefined ? "" : index
+  }`;
 };
 
 // 获取自定义key 最大值 + 1
@@ -84,27 +93,56 @@ const writeFile = async (
 };
 
 export const handleAutoWrite = async (
-  selectText: string
+  selectText: string,
+  useEnKey: boolean
 ): Promise<boolean | TQueryData> => {
   if (getEnableTransform()) {
-    const transKey = getTransKeyMax();
+    let transKey: string = "";
     const enableTrans = getEnableTrans();
     const entry = getEntry();
-    await writeFile(transKey, selectText, entry, true);
     if (enableTrans) {
       // 开启翻译
       const config = getTranFileConfig();
       const keys = Object.keys(config);
+      let enVal = "";
+      if (useEnKey) {
+        try {
+          const { toStr }: { toStr: string } = await commands.executeCommand(
+            "trans-lang.getValue",
+            {
+              text: selectText,
+              to: "en",
+            }
+          );
+          enVal = toStr;
+          transKey = toHump(toStr);
+          // 判断key是否已存在 如果存在下标+1
+          const index = getKeyIndex(transKey);
+          if (index) {
+            transKey = `${transKey}_${index}`;
+          }
+        } catch (error) {}
+      } else {
+        transKey = getTransKeyMax();
+      }
+      await writeFile(transKey, selectText, entry, true);
       try {
         for (const key of keys) {
           const transResult: {
             str: string;
             toStr: string;
             to: "jp" | "en";
-          } = await commands.executeCommand("trans-lang.getValue", {
-            text: selectText,
-            to: key,
-          });
+          } =
+            key === "en" && enVal
+              ? {
+                  str: selectText,
+                  toStr: enVal,
+                  to: "en",
+                }
+              : await commands.executeCommand("trans-lang.getValue", {
+                  text: selectText,
+                  to: key,
+                });
           await writeFile(
             transKey,
             transResult.toStr,
@@ -114,6 +152,8 @@ export const handleAutoWrite = async (
       } catch (error) {
         window.showErrorMessage(`翻译出错: ${error}`);
       }
+    } else {
+      transKey = getTransKeyMax();
     }
     return [{ path: transKey, value: selectText }];
   }

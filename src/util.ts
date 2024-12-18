@@ -1,4 +1,5 @@
-import { Position, Range, TextDocument, window } from "vscode";
+import { extensions, Position, Range, TextDocument, window } from "vscode";
+import { getConfigKeys } from "./fileData";
 
 function isObject(obj: any) {
   return Object.prototype.toString.call(obj) === "[object Object]";
@@ -44,6 +45,23 @@ export function queryData(
   return result;
 }
 
+export function getAllKeyPathsDFS(obj: Record<string, any>) {
+  let paths = [];
+  let stack = [{ current: obj, path: "" }];
+
+  while (stack.length > 0) {
+    let { current, path } = stack.pop()!;
+    for (let key in current) {
+      let newPath = path ? `${path}.${key}` : key; // 拼接路径
+      paths.push(newPath);
+      if (typeof current[key] === "object" && current[key] !== null) {
+        stack.push({ current: current[key], path: newPath });
+      }
+    }
+  }
+
+  return paths;
+}
 /**
  * 判断选中的文本前后是否有引号，如果有则返回带有引号的整个字符串，如果没有则返回空字符串。
  * @param document 当前文档
@@ -122,4 +140,46 @@ export const sleep = (time: number) => {
       resolve();
     }, time);
   });
+};
+
+export const getNowGitBranch = (): string => {
+  const gitExtension = extensions.getExtension("vscode.git")?.exports;
+  if (!gitExtension) {
+    return "";
+  }
+  const api = gitExtension.getAPI(1);
+  const repo = api.repositories?.[0]; // 获取所有 Git 仓库
+  if (repo) {
+    return repo.state.HEAD?.name || "";
+  }
+  return "";
+};
+
+export const toHump = (str: string) => {
+  const strList = str.replace(/[^(a-zA-Z0-9\s)]/g, "").split(" ");
+  let [f, ...other] = strList;
+  other = other.map((item) => {
+    const [s, ...o] = item;
+    return `${s.toLocaleUpperCase()}${o.join("")}`;
+  });
+  return `${f.toLocaleLowerCase()}${other.join("")}`;
+};
+
+/**
+ * 获取相同key名的最大下标+1
+ * @param val
+ * @returns
+ */
+export const getKeyIndex = (val: string) => {
+  const reg = new RegExp(`^${val}(_[0-9])*$`);
+  const filterKeys = getConfigKeys().filter((v) => reg.test(v));
+  if (filterKeys.length > 0) {
+    return (
+      (filterKeys
+        .map((v) => +v.replace(new RegExp(`^${val}_`), "") || 0)
+        .sort()
+        .pop() || 0) + 1
+    );
+  }
+  return null;
 };
