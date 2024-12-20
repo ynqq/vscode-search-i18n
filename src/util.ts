@@ -158,10 +158,12 @@ export const getNowGitBranch = (): string => {
 export const toHump = (str: string) => {
   const strList = str.replace(/[^(a-zA-Z0-9\s)]/g, "").split(" ");
   let [f, ...other] = strList;
-  other = other.map((item) => {
-    const [s, ...o] = item;
-    return `${s.toLocaleUpperCase()}${o.join("")}`;
-  });
+  other = other
+    .filter((v) => v)
+    .map((item) => {
+      const [s, ...o] = item;
+      return `${s.toLocaleUpperCase()}${o.join("")}`;
+    });
   return `${f.toLocaleLowerCase()}${other.join("")}`;
 };
 
