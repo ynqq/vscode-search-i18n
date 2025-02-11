@@ -185,3 +185,36 @@ export const getKeyIndex = (val: string) => {
   }
   return null;
 };
+
+/**
+ * 字符串转对象 a.b.c => {a: {b: {c: ""}}}
+ * @param str 字符串
+ * @returns
+ */
+export const genObj = <T extends string = string, R = PathToObject<T>>(
+  str: T
+): { obj: R; deepObj: object; path: string } => {
+  const list = str.split(".");
+  const result = {} as R;
+  let deepObj!: object;
+  const fun = (result: R, keyList: string[]) => {
+    const key = keyList.shift();
+    if (key) {
+      (result as any)[key] = {};
+      deepObj = (result as any)[key];
+      if (keyList.length) {
+        fun((result as any)[key], keyList);
+      }
+    }
+    return result;
+  };
+  return {
+    obj: fun(result, list),
+    deepObj,
+    path: str,
+  };
+};
+
+type PathToObject<T extends string> = T extends `${infer Key}.${infer Rest}`
+  ? { [K in Key]: PathToObject<Rest> }
+  : { [K in T]: "" };

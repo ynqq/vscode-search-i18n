@@ -1,4 +1,4 @@
-import { Selection, commands, window } from "vscode";
+import { Selection, TextEditor, commands, window, workspace } from "vscode";
 import { allCommonds } from "../enum";
 import {
   TQueryData,
@@ -10,6 +10,7 @@ import {
 } from "../util";
 import { getFileData } from "../fileData";
 import { handleAutoWrite } from "../autoWrite";
+import { getFilePathPrev, getPathConfig } from "../config";
 
 interface ReplaceParams {
   path: string;
@@ -64,6 +65,16 @@ export const replaceDisposable = commands.registerCommand(
   }
 );
 
+const getFilePath = (editor?: TextEditor) => {
+  if (editor) {
+    return editor.document.uri.path.replace(
+      workspace.workspaceFolders?.[0]?.uri?.path || "",
+      ""
+    );
+  }
+  return "";
+};
+
 /**
  * 处理vue转换
  * @param useEnKey 是否使用翻译的英文小驼峰当做key
@@ -78,13 +89,22 @@ const handleVueReplace = async (useEnKey: boolean) => {
     return;
   }
   const selectText = editor.document.getText(editor.selection);
+
   if (!selectText || !checkIsChinese(selectText)) {
     return;
   }
+
   const fileData = getFileData();
   let i18Datas = queryData(fileData, selectText);
+  const filePath = getFilePath(editor);
+  const prevObj = getFilePathPrev(filePath);
+  if (prevObj) {
+    // 需要加前缀
+    i18Datas = i18Datas.filter((v) => v.path.startsWith(prevObj.path));
+  }
+
   if (!i18Datas.length) {
-    const autoWrite = await handleAutoWrite(selectText, useEnKey);
+    const autoWrite = await handleAutoWrite(selectText, useEnKey, prevObj);
     if (autoWrite === false) {
       return;
     } else {
@@ -138,8 +158,14 @@ const handleJsReplace = async (useEnKey: boolean) => {
   }
   const fileData = getFileData();
   let i18Datas = queryData(fileData, selectText);
+  const filePath = getFilePath(editor);
+  const prevObj = getFilePathPrev(filePath);
+  if (prevObj) {
+    // 需要加前缀
+    i18Datas = i18Datas.filter((v) => v.path.startsWith(prevObj.path));
+  }
   if (!i18Datas.length) {
-    const autoWrite = await handleAutoWrite(selectText, useEnKey);
+    const autoWrite = await handleAutoWrite(selectText, useEnKey, prevObj);
     if (autoWrite === false) {
       return;
     } else {

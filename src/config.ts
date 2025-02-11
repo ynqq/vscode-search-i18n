@@ -7,8 +7,11 @@ import {
   LOCALESPATHS,
   TRANS_FILE_CONFIG,
   TRANSKEY,
+  PATH_CONFIG,
+  MAX_KEY,
 } from "./enum";
 import * as path from "path";
+import { genObj } from "./util";
 
 let realZHFilePath = ""; // 中文语言包文件路径
 
@@ -36,6 +39,33 @@ export const getEnableTransform = () => {
 };
 export const getTransKey = () => {
   return getCustomSetting<string>(TRANSKEY) || "autoKey";
+};
+export const getMaxKey = () => {
+  return getCustomSetting<number>(MAX_KEY) || 15;
+};
+export const getPathConfig = () => {
+  const config = getCustomSetting<Record<string, string>>(PATH_CONFIG) || {};
+  return Object.keys(config).reduce<Record<string, any>>((obj, k) => {
+    obj[k] = genObj(config[k]);
+    return obj;
+  }, {});
+};
+
+export const getFilePathPrev = (path: string) => {
+  const config = getPathConfig(),
+    keys = Object.keys(config);
+  let maxMatch = 0,
+    maxIndex;
+  keys.forEach((key, index) => {
+    let len = path.match(key)?.[0]?.length || 0;
+    if (len > maxMatch) {
+      maxIndex = index;
+    }
+  });
+  if (maxIndex !== undefined) {
+    return config[keys[maxIndex]];
+  }
+  return null;
 };
 /**
  * 是否开启自动翻译
