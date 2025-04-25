@@ -1,5 +1,6 @@
 export const LOCALESPATHS = "i18n-ally.localesPaths";
 export const ENTRY = "search-i18n.entry";
+export const INCLUDES_ENTRY = "search-i18n.includesEntry";
 export const INCLUDESFILE = "search-i18n.incldesFile";
 export const ENABLETRANSFORM = "search-i18n.enableTransform";
 export const TRANSKEY = "search-i18n.transKey";

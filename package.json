@@ -3,7 +3,7 @@
   "displayName": "search-i18n",
   "description": "1: 自动翻译语言包 2: 根据文本去匹配i18的key搜索对应的文件",
   "publisher": "ynqq",
-  "version": "0.0.19",
+  "version": "0.0.20",
   "engines": {
     "vscode": "^1.80.0"
   },
@@ -65,6 +65,11 @@
           "type": "number",
           "default": 15,
           "description": "自动翻译key最大长度，超过这个长度会出现提示框可以自定义"
+        },
+        "search-i18n.includesEntry": {
+          "type": "array",
+          "default": [],
+          "description": "如果有第三方库的语言包需要翻译，可以在这里配置，从根目录开始，格式为['src/locales/zh.js', 'src/locales/en.js']"
         }
       }
     },
@@ -139,7 +144,7 @@
     "lint": "eslint src --ext ts",
     "test": "node ./out/test/runTest.js",
     "build": "vsce package",
-    "publish": "vsce package && vsce publish"
+    "p": "vsce package && vsce publish"
   },
   "devDependencies": {
     "@types/glob": "^8.1.0",

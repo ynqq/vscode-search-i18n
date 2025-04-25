@@ -1,12 +1,20 @@
 import * as path from "path";
 import * as fs from "fs";
-import { window } from "vscode";
-import { getCustomSetting, getEntry, getRealZHFilePath } from "./config";
+import { window, workspace } from "vscode";
+import {
+  getCustomSetting,
+  getEntry,
+  getIncludesEntry,
+  getRealZHFilePath,
+} from "./config";
 import { ENTRY, LOCALESPATHS } from "./enum";
-import { getLocalesFolderContent } from "./search";
+import {
+  getLocalesFolderContent,
+  getLocalesFolderContentNotCheck,
+} from "./search";
 import { getAllKeyPathsDFS } from "./util";
 
-let fileData: Record<string, any>; // 中文语言包数据
+let fileData: Record<string, any> = {}; // 中文语言包数据
 export const getFileData = () => fileData;
 /**存储中文配置里面的key，如果有重复暂时使用加下标的方式 */
 let configKeys: string[] = [];
@@ -24,6 +32,19 @@ export const setAutoChange = (value: boolean) => {
 
 export const setFileData = async () => {
   const settings = getCustomSetting<string[]>(LOCALESPATHS);
+
+  const includesEntry = getIncludesEntry();
+  if (includesEntry.length) {
+    fileData = fileData || {};
+    for (const item of includesEntry) {
+      try {
+        const configFile = await getLocalesFolderContentNotCheck(item);
+        Object.assign(fileData, configFile);
+      } catch (error) {
+        console.log(error);
+      }
+    }
+  }
   const entry = getEntry();
   const configFile = await getLocalesFolderContent(
     settings[0].split("/"),
@@ -33,7 +54,9 @@ export const setFileData = async () => {
     window.showErrorMessage(`未查到配置的入口文件：${ENTRY}。默认为：zh.js`);
     return;
   }
-  fileData = configFile;
+  Object.assign(fileData, configFile);
+  console.log(fileData, "-----");
+
   configKeys = getAllKeyPathsDFS(configFile);
 };
 

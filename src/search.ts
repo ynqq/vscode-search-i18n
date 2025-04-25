@@ -74,13 +74,19 @@ export async function getLocalesFolderContent(
   path: string[],
   entry: string
 ): Promise<Record<string, any> | null> {
-  const entryBefore = entry.split("/").slice(0, -1).map(v => `${v}/`).join('');
+  const entryBefore = entry
+    .split("/")
+    .slice(0, -1)
+    .map((v) => `${v}/`)
+    .join("");
   const folderPath = Uri.joinPath(
     Uri.file(workspace.workspaceFolders![0].uri.fsPath),
     ...path,
-    entryBefore,
+    entryBefore
   );
+
   const files = await workspace.fs.readDirectory(folderPath);
+  console.log(folderPath, "folderPath11", files);
   for (let item of files) {
     if (item[0] === entry.replace(/(\.)?\.\/.*\//, "")) {
       try {
@@ -96,6 +102,26 @@ export async function getLocalesFolderContent(
         return null;
       }
     }
+  }
+  return null;
+}
+export async function getLocalesFolderContentNotCheck(
+  entry: string
+): Promise<Record<string, any> | null> {
+  const filePath = Uri.joinPath(
+    Uri.file(workspace.workspaceFolders![0].uri.fsPath),
+    entry
+  );
+
+  try {
+    const file = await workspace.fs.readFile(Uri.joinPath(filePath));
+    const jsonData = eval(
+      "(" + (file.toString().match(match)?.[0] || "") + ")"
+    );
+    return jsonData;
+  } catch (error) {
+    console.log(error, "readFileError");
+    return null;
   }
   return null;
 }

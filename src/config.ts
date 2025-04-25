@@ -9,6 +9,7 @@ import {
   TRANSKEY,
   PATH_CONFIG,
   MAX_KEY,
+  INCLUDES_ENTRY,
 } from "./enum";
 import * as path from "path";
 import { genObj } from "./util";
@@ -27,6 +28,9 @@ export const setRealZHFilePath = () => {
 };
 export const getEntry = () => {
   return getCustomSetting<string>(ENTRY) || "zh.js";
+};
+export const getIncludesEntry = () => {
+  return getCustomSetting<string[]>(INCLUDES_ENTRY) || [];
 };
 export const getI18nPaths = () => {
   return getCustomSetting<string[]>(LOCALESPATHS);
