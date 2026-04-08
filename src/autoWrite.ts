@@ -136,6 +136,33 @@ const showPicker = async (val: string) => {
   });
 };
 
+const checkNameRepeat = async (
+  fileData: any,
+  transKey: string,
+  prevObj: any,
+) => {
+  return new Promise<string>(async (resolve, reject) => {
+    const newKey = prevObj ? `${prevObj.path}.${transKey}` : transKey;
+    if (get(fileData, newKey)) {
+      window.showWarningMessage(`${newKey}已存在`);
+      try {
+        const val = await showPicker(transKey);
+        return checkNameRepeat(fileData, val || transKey, prevObj)
+          .then((r) => {
+            resolve(r);
+          })
+          .catch((e) => {
+            reject(e);
+          });
+      } catch (error) {
+        reject();
+      }
+    } else {
+      resolve(transKey);
+    }
+  });
+};
+
 export const handleAutoWrite = async (
   selectText: string,
   useEnKey: boolean,
@@ -162,16 +189,15 @@ export const handleAutoWrite = async (
           toStr = toStr.replace(/[^A-Za-z0-9]/g, "");
           enVal = toStr;
           transKey = toHump(toStr);
+
           if (transKey.length > getMaxKey()) {
             const val = await showPicker(transKey);
             transKey = val || transKey;
-            const fileData = getFileData();
-            const newKey = prevObj ? `${prevObj.path}.${transKey}` : transKey;
-            if (get(fileData, newKey)) {
-              window.showWarningMessage(`${newKey}已存在`);
-              return false;
-            }
           }
+
+          const fileData = getFileData();
+          transKey = await checkNameRepeat(fileData, transKey, prevObj);
+
           // 判断key是否已存在 如果存在下标+1
           const index = getKeyIndex(transKey);
           if (index) {
@@ -184,6 +210,7 @@ export const handleAutoWrite = async (
       if (prevObj) {
         prevObj.deepObj[transKey] = selectText;
       }
+
       await writeFile(
         prevObj ? `${prevObj.path}.${transKey}` : transKey,
         selectText,

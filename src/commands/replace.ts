@@ -161,7 +161,10 @@ const handleJsReplace = async (useEnKey: boolean) => {
   const fileData = getFileData();
   let i18Datas = queryData(fileData, selectText);
   const filePath = getFilePath(editor);
-  const prevObj = getFilePathPrev(filePath);
+  let prevObj = getFilePathPrev(filePath);
+  if (!prevObj) {
+    prevObj = getNamespaceRule(filePath);
+  }
   if (prevObj) {
     // 需要加前缀
     i18Datas = i18Datas.filter((v) => v.path.startsWith(prevObj.path));
