@@ -10,9 +10,10 @@ import {
   PATH_CONFIG,
   MAX_KEY,
   INCLUDES_ENTRY,
+  NAMESPACE_RULES,
 } from "./enum";
 import * as path from "path";
-import { genObj } from "./util";
+import { genObj, toHump } from "./util";
 
 let realZHFilePath = ""; // 中文语言包文件路径
 
@@ -22,7 +23,7 @@ export const setRealZHFilePath = () => {
   const settings = getI18nPaths();
   const folderPath = Uri.joinPath(
     Uri.file(workspace.workspaceFolders![0].uri.fsPath),
-    ...settings[0].split("/")
+    ...settings[0].split("/"),
   );
   realZHFilePath = path.join(folderPath.fsPath, entry);
 };
@@ -71,6 +72,40 @@ export const getFilePathPrev = (path: string) => {
   }
   return null;
 };
+
+const getNamespace = (path: string) => {
+  const config = getCustomSetting<string[]>(NAMESPACE_RULES) || [];
+  if (!config?.length) {
+    return null;
+  }
+  for (let rule of config) {
+    if (rule.endsWith("/")) {
+      rule = rule.slice(0, -1);
+    }
+    if (!rule.includes("*") || !rule.endsWith("*")) {
+      continue;
+    }
+    rule = `${rule.slice(0, -1)}(*)/`;
+    const reg = new RegExp(rule.replace(/\*/g, ".*?"));
+    const result = path.match(reg);
+    if (result) {
+      return toHump(result[1]);
+    }
+  }
+  return null;
+};
+
+/**
+ * 获取匹配的命名空间
+ */
+export const getNamespaceRule = (path: string) => {
+  const name = getNamespace(path);
+  if (!name) {
+    return name;
+  }
+  return genObj(name);
+};
+
 /**
  * 是否开启自动翻译
  * @returns

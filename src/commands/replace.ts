@@ -10,7 +10,7 @@ import {
 } from "../util";
 import { getFileData } from "../fileData";
 import { handleAutoWrite } from "../autoWrite";
-import { getFilePathPrev, getPathConfig } from "../config";
+import { getFilePathPrev, getNamespaceRule, getPathConfig } from "../config";
 
 interface ReplaceParams {
   path: string;
@@ -32,11 +32,11 @@ const replaceSelectText = ({ path, isVue, isJs, hasSymbol }: ReplaceParams) => {
     if (hasSymbol) {
       const startPosition = position.start.with(
         position.start.line,
-        position.start.character - 1
+        position.start.character - 1,
       );
       const endPosition = position.end.with(
         position.end.line,
-        position.end.character + 1
+        position.end.character + 1,
       );
 
       newPosition = position.with({
@@ -62,14 +62,14 @@ export const replaceDisposable = commands.registerCommand(
   allCommonds.replace,
   (options) => {
     replaceSelectText(options);
-  }
+  },
 );
 
 const getFilePath = (editor?: TextEditor) => {
   if (editor) {
     return editor.document.uri.path.replace(
       workspace.workspaceFolders?.[0]?.uri?.path || "",
-      ""
+      "",
     );
   }
   return "";
@@ -97,12 +97,14 @@ const handleVueReplace = async (useEnKey: boolean) => {
   const fileData = getFileData();
   let i18Datas = queryData(fileData, selectText);
   const filePath = getFilePath(editor);
-  const prevObj = getFilePathPrev(filePath);
+  let prevObj = getFilePathPrev(filePath);
+  if (!prevObj) {
+    prevObj = getNamespaceRule(filePath);
+  }
   if (prevObj) {
     // 需要加前缀
     i18Datas = i18Datas.filter((v) => v.path.startsWith(prevObj.path));
   }
-
   if (!i18Datas.length) {
     const autoWrite = await handleAutoWrite(selectText, useEnKey, prevObj);
     if (autoWrite === false) {
@@ -114,7 +116,7 @@ const handleVueReplace = async (useEnKey: boolean) => {
   const selectTextAndSymbol = querySelectTextAndSymbol(
     editor.document,
     editor.selection.active,
-    selectText
+    selectText,
   );
   replaceSelectText({
     path: i18Datas[0].path,
@@ -129,14 +131,14 @@ const handleVueReplace = async (useEnKey: boolean) => {
  */
 export const replaceVueDisposable = commands.registerCommand(
   allCommonds.replaceVue,
-  () => handleVueReplace(false)
+  () => handleVueReplace(false),
 );
 /**
  * vue使用翻译的key
  */
 export const replaceVueDisposableUseEnKey = commands.registerCommand(
   allCommonds.replaceVueWithEn,
-  () => handleVueReplace(true)
+  () => handleVueReplace(true),
 );
 
 /**
@@ -175,7 +177,7 @@ const handleJsReplace = async (useEnKey: boolean) => {
   const selectTextAndSymbol = querySelectTextAndSymbol(
     editor.document,
     editor.selection.active,
-    selectText
+    selectText,
   );
   replaceSelectText({
     path: i18Datas[0].path,
@@ -189,12 +191,12 @@ const handleJsReplace = async (useEnKey: boolean) => {
  */
 export const replaceJsDisposable = commands.registerCommand(
   allCommonds.replaceJs,
-  () => handleJsReplace(false)
+  () => handleJsReplace(false),
 );
 /**
  * js使用翻译的key
  */
 export const replaceJsDisposableUseEnKey = commands.registerCommand(
   allCommonds.replaceJsWithEn,
-  () => handleJsReplace(true)
+  () => handleJsReplace(true),
 );

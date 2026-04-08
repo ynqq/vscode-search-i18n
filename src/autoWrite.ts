@@ -50,13 +50,13 @@ const writeFile = async (
   selectText: string,
   entry: string,
   isAssignFileData: boolean,
-  assignObj?: any
+  assignObj?: any,
 ) => {
   const settings = getCustomSetting<string[]>(LOCALESPATHS);
   const filePath = Uri.joinPath(
     Uri.file(workspace.workspaceFolders![0].uri.fsPath),
     ...settings[0].split("/"),
-    entry
+    entry,
   );
   const file = await workspace.fs.readFile(filePath);
   const jsonReg = /(\n)*\}(\n*)$/;
@@ -72,7 +72,7 @@ const writeFile = async (
       lastFile = fileString.replace(
         jsReg,
         `  ${transKey}: '${selectText}',
-};`
+};`,
       );
     }
   } else if (jsonReg.test(fileString)) {
@@ -139,7 +139,7 @@ const showPicker = async (val: string) => {
 export const handleAutoWrite = async (
   selectText: string,
   useEnKey: boolean,
-  prevObj: any
+  prevObj: any,
 ): Promise<boolean | TQueryData> => {
   if (getEnableTransform()) {
     let transKey: string = "";
@@ -152,13 +152,14 @@ export const handleAutoWrite = async (
       let enVal = "";
       if (useEnKey) {
         try {
-          const { toStr }: { toStr: string } = await commands.executeCommand(
+          let { toStr }: { toStr: string } = await commands.executeCommand(
             "trans-lang.getValue",
             {
               text: selectText,
               to: "en",
-            }
+            },
           );
+          toStr = toStr.replace(/[^A-Za-z0-9]/g, "");
           enVal = toStr;
           transKey = toHump(toStr);
           if (transKey.length > getMaxKey()) {
@@ -188,7 +189,7 @@ export const handleAutoWrite = async (
         selectText,
         entry,
         true,
-        prevObj
+        prevObj,
       );
       try {
         for (const key of keys) {
@@ -215,7 +216,7 @@ export const handleAutoWrite = async (
             transResult.toStr,
             config[key as keyof typeof config]!,
             false,
-            prevObj
+            prevObj,
           );
         }
       } catch (error) {

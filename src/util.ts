@@ -156,7 +156,7 @@ export const getNowGitBranch = (): string => {
 };
 
 export const toHump = (str: string) => {
-  const strList = str.replace(/[^(a-zA-Z0-9\s)]/g, "").split(" ");
+  const strList = str.replace(/-|_/g, ' ').replace(/[^(a-zA-Z0-9\s)]/g, "").split(" ");
   let [f, ...other] = strList;
   other = other
     .filter((v) => v)

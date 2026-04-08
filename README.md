@@ -1,4 +1,6 @@
-# search-i18n
+# 从 search-i18n 改名
+
+# vue-i18n-translate
 
 ![alt text22](images/download.png)
 

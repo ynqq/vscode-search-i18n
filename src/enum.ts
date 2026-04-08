@@ -8,6 +8,7 @@ export const ENABLE_TRANS = "search-i18n.enableTrans";
 export const TRANS_FILE_CONFIG = "search-i18n.transFileConfig";
 export const PATH_CONFIG = "search-i18n.pathConfig";
 export const MAX_KEY = "search-i18n.maxLength";
+export const NAMESPACE_RULES = "search-i18n.namespaceRules";
 
 export const allCommonds = {
   search: "search-i18n.searchi18n",
