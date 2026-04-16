@@ -186,8 +186,8 @@ export const handleAutoWrite = async (
               to: "en",
             },
           );
-          toStr = toStr.replace(/[^A-Za-z0-9]/g, "");
           enVal = toStr;
+          toStr = toStr.replace(/[^A-Za-z0-9]/g, "");
           transKey = toHump(toStr);
 
           if (transKey.length > getMaxKey()) {
